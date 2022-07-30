@@ -88,8 +88,8 @@ async function openBrowser(input, id){
 
         let isVariant = true;
         let variantType = 1;
-        let note = (typeof(input.note) == "undefined" ? config.note : input.note);
-        let jumlahCustom = (typeof(input.jumlah) == "undefined" | input.jumlah <= 1 ? false : true);
+        let note = (typeof(input.note) == "undefined" | input.note == "" ? config.note : input.note);
+        let jumlahCustom = (typeof(input.jumlah) == "undefined" | input.jumlah <= 1 | input.jumlah == "" ? false : true);
 
         try{
             await page.waitForSelector("#pdpVariantContainer > div", {timeout: config.defaultTimeout});
