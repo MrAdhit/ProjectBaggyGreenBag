@@ -1,0 +1,15 @@
+{
+  "name": "projectbaggygreenbag",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "MrAdhit <adhityarimba97@gmail.com>",
+  "dependencies": {
+    "csv-parser": "^3.0.0",
+    "log4js": "^6.6.1",
+    "puppeteer": "^15.5.0"
+  }
+}
