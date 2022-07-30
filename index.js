@@ -68,8 +68,17 @@ async function openBrowser(input, id){
         const page = await browser.newPage();
 
         logger.info(`Mengatur Cookies`);
-        let cookies = await fss.readFile(input.akun);
-        cookies = JSON.parse(cookies);
+        let cookies = await fss.readFile(input.akun).catch((err) => {
+            logger.error(`Tidak bisa menemukan file "${input.akun}"`);
+            browser.close();
+            return;
+        });
+        try{
+            cookies = JSON.parse(cookies);
+        }catch(error){
+            browser.close();
+            return;
+        }
         await page.setCookie(...cookies.cookies);
 
         logger.info(`Menuju "${input.produk}"`);
