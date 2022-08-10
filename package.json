@@ -9,8 +9,15 @@
   },
   "author": "MrAdhit <adhityarimba97@gmail.com>",
   "dependencies": {
+    "axios": "^0.27.2",
     "csv-parser": "^3.0.0",
     "log4js": "^6.6.1",
-    "puppeteer": "^15.5.0"
+    "node-fetch": "^2.6.7",
+    "puppeteer": "^15.5.0",
+    "puppeteer-extra": "^3.3.4",
+    "puppeteer-extra-plugin-stealth": "^2.11.1",
+    "puppeteer-extra-plugin-user-preferences": "^2.4.0",
+    "random-useragent": "^0.5.0",
+    "selenium-webdriver": "^4.3.1"
   }
 }
