@@ -63,7 +63,7 @@ async function openBrowser(input, id){
     logger.addContext("browserID", date);
 
     logger.info(`Membuka Browser`);
-    const browser = await puppeteer.launch({headless: false, ignoreDefaultArgs: ["--enable-automation", "--enable-blink-features=IdleDetection"], args: ["--window-size=1920,1080", "--no-sandbox"], defaultViewport: null});
+    const browser = await puppeteer.launch({headless: true, ignoreDefaultArgs: ["--enable-automation", "--enable-blink-features=IdleDetection"], args: ["--window-size=1920,1080", "--no-sandbox"], defaultViewport: null});
     browserList.set(id, true);
     try{
         const page = await browser.newPage();
@@ -109,9 +109,9 @@ async function openBrowser(input, id){
             }
           });
 
-        let uag = userAgent.getRandom((ua) => ua.osName == "Windows" && ua.browserName == "Firefox");
-        logger.info(`Mengatur useragent menjadi "${uag}"`);
-        await page.setUserAgent(uag);
+        // let uag = userAgent.getRandom((ua) => ua.osName == "Windows" && ua.browserName == "Firefox");
+        // logger.info(`Mengatur useragent menjadi "${uag}"`);
+        // await page.setUserAgent(uag);
 
         logger.info(`Mengatur Cookies`);
         let cookies = await fss.readFile(input.akun).catch((err) => {
