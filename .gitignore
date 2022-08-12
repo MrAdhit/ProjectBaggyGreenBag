@@ -130,3 +130,9 @@ dist
 .pnp.*
 ssLogs/
 *.exe
+*.png
+index-axios.js
+index-chrome.js
+index-fetch.js
+index-selenium.js
+clearCart.js

@@ -18,6 +18,6 @@
     "puppeteer-extra-plugin-stealth": "^2.11.1",
     "puppeteer-extra-plugin-user-preferences": "^2.4.0",
     "random-useragent": "^0.5.0",
-    "selenium-webdriver": "^4.3.1"
+    "terminal-kit": "^2.5.1"
   }
 }
