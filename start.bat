@@ -1,3 +1,4 @@
 @echo off
 node index
-pause
+echo Click any key to quit
+pause>nul

@@ -94,36 +94,6 @@ let browserList = new Map();
             chooseFile();
         }
 
-        if(resp.selectedIndex == 4){
-            term.clear();
-            let chooseCookiesFiles = async () => {
-                let cookiesFiles = await fss.readdir("./");
-                cookiesFiles = cookiesFiles.filter((val) => val.includes(".json"));
-                term.bold("Pilih file cookies akun: ");
-                term.inputField({autoComplete: cookiesFiles, autoCompleteHint: true, autoCompleteMenu: true}, async (err, rp) => {
-                    if(!fs.existsSync(rp)){
-                        term.clear();
-                        term.bold.red(`Tidak bisa menemukan file "${rp}"\n`)
-                        chooseCookiesFiles();
-                        return;
-                    }
-                    
-                    if(typeof(require(`./${rp}`).url) == "undefined"){
-                        term.clear();
-                        term.bold.red(`File yang dipilih bukan file cookies yang valid\n`);
-                        chooseCookiesFiles();
-                        return;
-                    }
-
-                    term.clear();
-                    term.bold.red(centerize("[Mode Clear Cart]", "="));
-                    openBrowser({akun: rp}, "clearcart", false, true);
-                });
-            }
-            chooseCookiesFiles();
-            return;
-        }
-
         if(resp.selectedIndex == 3){
             terminate();
         }
@@ -140,8 +110,6 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 function centerize(str, filler = " "){
     return repeatStr(filler, Math.floor((process.stdout.columns - str.length) / 2)) + str + repeatStr(filler, Math.floor((process.stdout.columns - str.length) / 2)) + "\n";
 }
-
-
 
 function repeatStr(char, count){
     let arr = [];
@@ -456,9 +424,9 @@ async function openBrowser(input, id, manual, clearcart){
             }
             isSuccess = !v1;
         }
-        (!fs.existsSync("./ssLogs") ? fs.mkdirSync("./ssLogs") : "");
+        // (!fs.existsSync("./ssLogs") ? fs.mkdirSync("./ssLogs") : "");
         await page.waitForTimeout(config.delay);
-        await page.screenshot({path: `./ssLogs/${date}-${id}.png`});
+        // await page.screenshot({path: `./ssLogs/${date}-${id}.png`});
         setTimeout(() => {
             if(browserList.size == 0){
                 terminate();
