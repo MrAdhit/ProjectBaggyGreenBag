@@ -45,28 +45,48 @@ let browserList = new Map();
     term.fullscreen();
     term("Pilih Mode:");
     term.singleColumnMenu(["Add To Cart (Auto)", "Add To Cart (Manual)", "Clear Cart", "Cancel"], async (err, resp) => {
-        if([0, 1].includes(resp.selectedIndex)){
-            let chooseFile = async (retry = false, file) => {
+        if([0, 1, 2].includes(resp.selectedIndex)){
+            term.clear();
+            let chooseFile = async () => {
                 let files = await fss.readdir("./");
-                files = files.filter((val) => val.includes(".csv"));
-                term.clear();
-                (retry ? term.bold.red(`Tidak bisa menemukan file "${file}"\n`) : "");
+                files = files.filter((val) => {
+                    if(val.includes(".csv")){
+                        return fs.readFileSync(val).includes("akun");
+                    }
+                });
                 term.bold("Pilih file CSV data: ");
                 term.inputField({autoComplete: files, autoCompleteHint: true, autoCompleteMenu: true}, async (err, res) => {
                     if(!fs.existsSync(res)){
-                        chooseFile(true, res);
+                        term.clear();
+                        term.bold.red(`Tidak bisa menemukan file "${res}"\n`)
+                        chooseFile();
                         return;
                     }
 
                     term.clear();
+
+                    if(resp.selectedIndex == 2){
+                        term.bold.red(centerize("[Mode Clear Cart]", "="));
+                        fs.createReadStream(res)
+                            .pipe(csv())
+                            .on("data", (data) => dataRes.push(data))
+                            .on("end" , () => {
+                                dataRes.forEach(async(data, index) => {
+                                    await delay(1000 * index);
+                                    runThis(data, false, true);
+                                });
+                            });
+                        return;
+                    }
 
                     (resp.selectedIndex == 0 ? term.bold.cyan(centerize("[Mode Otomatis]", "=")) : term.bold.green(centerize("[Mode Manual]", "=")));
                     fs.createReadStream(res)
                         .pipe(csv())
                         .on("data", (data) => dataRes.push(data))
                         .on("end" , () => {
-                            dataRes.forEach((data) => {
-                                runThis(data, (resp.selectedIndex == 0 ? false : true));
+                            dataRes.forEach(async(data, index) => {
+                                await delay(1000 * index);
+                                runThis(data, (resp.selectedIndex == 0 ? false : true), false);
                             });
                         });
                 });
@@ -74,7 +94,7 @@ let browserList = new Map();
             chooseFile();
         }
 
-        if(resp.selectedIndex == 2){
+        if(resp.selectedIndex == 4){
             term.clear();
             let chooseCookiesFiles = async () => {
                 let cookiesFiles = await fss.readdir("./");
@@ -87,7 +107,7 @@ let browserList = new Map();
                         chooseCookiesFiles();
                         return;
                     }
-                    // TODO : Clear Cart
+                    
                     if(typeof(require(`./${rp}`).url) == "undefined"){
                         term.clear();
                         term.bold.red(`File yang dipilih bukan file cookies yang valid\n`);
@@ -96,7 +116,7 @@ let browserList = new Map();
                     }
 
                     term.clear();
-                    term.bold.red(centerize("[Mode Clear Cart]", "="))
+                    term.bold.red(centerize("[Mode Clear Cart]", "="));
                     openBrowser({akun: rp}, "clearcart", false, true);
                 });
             }
@@ -115,9 +135,13 @@ function terminate(){
     process.exit();
 }
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 function centerize(str, filler = " "){
     return repeatStr(filler, Math.floor((process.stdout.columns - str.length) / 2)) + str + repeatStr(filler, Math.floor((process.stdout.columns - str.length) / 2)) + "\n";
 }
+
+
 
 function repeatStr(char, count){
     let arr = [];
@@ -127,19 +151,19 @@ function repeatStr(char, count){
     return arr.join("");
 }
 
-function runThis(data, manual = false){
+function runThis(data, manual = false, clearcart){
     if(browserList.size > config.maxBrowser){
         setTimeout(() => {
-            runThis(data, manual);
+            runThis(data, manual, clearcart);
         }, 1000);
         return;
     }
     id++;
     browserList.set(`browser${id}`, true);
-    openBrowser(data, `browser${id}`, manual);
+    openBrowser(data, `browser${id}`, manual, clearcart);
 }
 
-async function openBrowser(input, id, manual, clearcart = false){
+async function openBrowser(input, id, manual, clearcart){
     const logger = log4js.getLogger(id);
     logger.addContext("browserID", date);
 
@@ -207,7 +231,7 @@ async function openBrowser(input, id, manual, clearcart = false){
 
         if(clearcart){
             logger.info(`Menuju halaman cart`);
-            await page.goto("https://www.tokopedia.com/cart");
+            await page.goto("https://www.tokopedia.com/cart", {timeout: 0});
 
             try{
                 await page.$eval("body > h1", (el) => el.textContent);
@@ -227,14 +251,16 @@ async function openBrowser(input, id, manual, clearcart = false){
             await page.waitForTimeout(config.delay);
             (emptyCart ? logger.info(`Cart sudah kosong`) : "");
             if(!emptyCart){
+                await page.waitForTimeout(config.delay);
+                await page.waitForSelector("#check-all-items");
                 let checked = await page.$eval("#check-all-items", (el) => el.checked);
-
                 logger.info(`Menghapus semua barang dari cart`);
-                (checked ? "" : await page.click("#check-all-items"));
+                (checked ? "" : await page.click("#cart-sticky-sellect-all > div.css-loqb2 > div.wrapper__left > label"));
+                await page.waitForTimeout(config.delay);
                 await page.click("#cart-sticky-sellect-all > div.css-loqb2 > div.wrapper__right > p.wrapper__button.css-1sa24v9-unf-heading.e1qvo2ff8");
-
-                await page.waitForSelector("body > div:nth-child(38) > div.css-19osedp-unf-dialog.ef541p40 > div > button.css-16oullq-unf-btn.eg8apji0");
-                await page.click("body > div:nth-child(38) > div.css-19osedp-unf-dialog.ef541p40 > div > button.css-16oullq-unf-btn.eg8apji0");
+                await page.waitForTimeout(config.delay);
+                await page.waitForSelector("aria/Hapus Barang","aria/[role=\"generic\"]");
+                await page.click("aria/Hapus Barang","aria/[role=\"generic\"]");
 
                 await page.waitForSelector("body > div:nth-child(32) > div > p");
                 let info = await page.$eval("body > div:nth-child(32) > div > p", (el) => el.textContent);
@@ -244,13 +270,17 @@ async function openBrowser(input, id, manual, clearcart = false){
 
             browserList.delete(id);
             await browser.close();
-            terminate();
+            setTimeout(() => {
+                if(browserList.size == 0){
+                    terminate();
+                }
+            }, 1000);
 
             return;
         }
 
         logger.info(`Menuju "${input.produk}"`);
-        await page.goto(input.produk);
+        await page.goto(input.produk, {timeout: 0});
 
         logger.info(`Sukses menuju "${input.produk}"`);
 
@@ -412,6 +442,11 @@ async function openBrowser(input, id, manual, clearcart = false){
                 errorMsg = await errorMsg.evaluate(el => el.textContent);
                 logger.error(errorMsg);
                 if(errorMsg == "Maaf, terjadi sedikit kendala. Coba ulangi beberapa saat lagi ya."){
+                    if(tryAtc >= 3){
+                        logger.warn("Kegagalan sudah mencapai batas, menjalankan ulang!");
+                        openBrowser(input, id, manual, clearcart);
+                        browser.close();
+                    }
                     v1 = true;
                     tryAtc++;
                     await page.waitForTimeout(10000);
@@ -421,7 +456,9 @@ async function openBrowser(input, id, manual, clearcart = false){
             }
             isSuccess = !v1;
         }
-        // await page.screenshot({path: `./ssLogs/${date}-${id}.png`});
+        (!fs.existsSync("./ssLogs") ? fs.mkdirSync("./ssLogs") : "");
+        await page.waitForTimeout(config.delay);
+        await page.screenshot({path: `./ssLogs/${date}-${id}.png`});
         setTimeout(() => {
             if(browserList.size == 0){
                 terminate();
@@ -434,6 +471,6 @@ async function openBrowser(input, id, manual, clearcart = false){
         logger.error(error);
         browser.close();
         logger.warn("Mengalami kegagalan, menjalankan ulang!");
-        openBrowser(input, id, manual);
+        openBrowser(input, id, manual, clearcart);
     }
 }
